@@ -190,8 +190,11 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         const int MOUSEEVENTF_RIGHTUP = 0x0010; //模拟鼠标右键抬起
         const int MOUSEEVENTF_WHEEL = 0x0800; //滾輪
         const int MOUSEEVENTF_ABSOLUTE = 0x8000; //标示是否采用绝对坐标
-
-
+        int x, y;
+        double temp_x, temp_y;
+        int mouse_state = 0;
+        int move_check = 0;
+        int aim_count = 0;
 
         Process[] processes;
         IntPtr WindowHandle;
@@ -381,13 +384,12 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
 
                 for (int i = 0; i < skeletons.Length; i++)
                 {
-                    if (skeletons[i].TrackingState == SkeletonTrackingState.Tracked)
+                    if ((skeletons[i].TrackingState == SkeletonTrackingState.Tracked) || (skeletons[i].TrackingState == SkeletonTrackingState.PositionOnly))
                     {
                         JointCollection joint = skeletons[i].Joints;
 
                         
-                        double Hip_distance = Math.Sqrt(
-                                        Math.Pow((joint[JointType.HipRight].Position.X - joint[JointType.HipLeft].Position.X), 2) );
+                        double Hip_distance = Math.Abs(joint[JointType.HipRight].Position.X - joint[JointType.HipLeft].Position.X);
 
                         //Console.WriteLine("Hip Distance " + Hip_distance);
 
@@ -423,7 +425,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
 
 
                         // 模擬D(向右)
-                        if ((Hip_distance < 0.145) && (joint[JointType.Head].Position.X-0.02 > joint[JointType.ShoulderCenter].Position.X) && (D_counter <= 3))
+                        if ((Hip_distance < 0.144) && (joint[JointType.Head].Position.X-0.02 > joint[JointType.ShoulderCenter].Position.X) && (D_counter <= 3))
                         {
                             keybd_event(VK_D, (byte)MapVirtualKey(VK_D, 0), KEYEVENTF_EXTENDEDKEY, (IntPtr)0);
                             // keybd_event(VK_shift, (byte)MapVirtualKey(VK_shift, 0), KEYEVENTF_EXTENDEDKEY, (IntPtr)0);
@@ -435,7 +437,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                             D_counter = 0;
                         }
                         // 模擬A(向左)
-                        if ((Hip_distance < 0.145)  && (joint[JointType.Head].Position.X+0.02 < joint[JointType.ShoulderCenter].Position.X) && (A_counter <= 3))
+                        if ((Hip_distance < 0.144)  && (joint[JointType.Head].Position.X+0.02 < joint[JointType.ShoulderCenter].Position.X) && (A_counter <= 3))
                         {
                             keybd_event(VK_A, (byte)MapVirtualKey(VK_A, 0), KEYEVENTF_EXTENDEDKEY, (IntPtr)0);
                             //keybd_event(VK_shift, (byte)MapVirtualKey(VK_shift, 0), KEYEVENTF_EXTENDEDKEY, (IntPtr)0);
@@ -458,12 +460,39 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
 
 
                         // 模擬舉槍滑鼠右鍵(瞄準)
-                        if((joint[JointType.WristLeft].Position.Y > joint[JointType.Spine].Position.Y) && (joint[JointType.WristRight].Position.Y > joint[JointType.Spine].Position.Y))
+                        if((joint[JointType.WristLeft].Position.Y > joint[JointType.HipCenter].Position.Y) && (joint[JointType.WristRight].Position.Y > joint[JointType.HipCenter].Position.Y))
                         {
                             mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
+                            /*double temp;
+
+                            if(mouse_state == 0)
+                            {
+                                temp_x = joint[JointType.WristLeft].Position.X;
+                                temp_y = joint[JointType.WristLeft].Position.Y;
+                                mouse_state = 1;
+                            }
+
+                            temp = Math.Sqrt(Math.Pow((temp_y - joint[JointType.WristLeft].Position.Y), 2) + Math.Pow((temp_x - joint[JointType.WristLeft].Position.X), 2));
+                            if (temp > 0.2)
+                            {
+                                x = (int)(temp_x*50 - joint[JointType.WristLeft].Position.X*50);
+                                y = (int)(temp_y * 50 - joint[JointType.WristLeft].Position.Y * 50);
+                                temp_x = joint[JointType.WristLeft].Position.X;
+                                temp_y = joint[JointType.WristLeft].Position.Y;
+                                move_check = 1;
+                            }
+
+                            if (move_check == 1 && aim_count <= 1)
+                            {
+                                mouse_event(MOUSEEVENTF_MOVE, (-1) * x, y, 0, 0);
+                                move_check = 0;
+                                x = 0;
+                                y = 0;
+                            }*/
+
 
                             // 模擬射擊左鍵(射擊)
-                            if ((joint[JointType.ElbowRight].Position.Z > joint[JointType.HipCenter].Position.Z + 0.03) && (shoot_count <= 1))
+                            if ((joint[JointType.ElbowRight].Position.Z > joint[JointType.HipCenter].Position.Z+0.11) && (shoot_count <= 1))
                             {
                                 mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);                                                                                    
                             }
@@ -474,11 +503,15 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
 
                             if (shoot_count > 3)
                                 shoot_count = 0;
+                            if (aim_count > 10)
+                                aim_count = 0;
 
+                            aim_count++;
                             shoot_count++;
                         }
                         else
                         {
+                            mouse_state = 0;
                             shoot_count = 0;
                             mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
                             mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
