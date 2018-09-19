@@ -191,7 +191,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         const int MOUSEEVENTF_RIGHTUP = 0x0010; //模拟鼠标右键抬起
         const int MOUSEEVENTF_WHEEL = 0x0800; //滾輪
         const int MOUSEEVENTF_ABSOLUTE = 0x8000; //标示是否采用绝对坐标
-        int x, y;
+
         static double currentHand_x, currentHand_y;
         static int mouse_state = 0;
         static bool move_check = false;
@@ -396,7 +396,9 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
 
 
                         double Hip_distance = Math.Abs(joint[JointType.HipRight].Position.X - joint[JointType.HipLeft].Position.X);
+                        //膝蓋間(X軸)的距離
                         double kneeDistance = Math.Abs(joint[JointType.KneeRight].Position.X - joint[JointType.KneeLeft].Position.X);
+                        //屁股到膝蓋間(x,z軸)的距離
                         double kneeHipDistance = Math.Sqrt(Math.Pow(joint[JointType.HipLeft].Position.Z - joint[JointType.KneeLeft].Position.Z, 2) + Math.Pow(joint[JointType.HipLeft].Position.X - joint[JointType.KneeLeft].Position.X, 2));
 
                         //Console.WriteLine("Distance: " + kneeHipDistance);
@@ -418,21 +420,27 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                                 if (W_counter < 12)
                                     keybd_event(VK_W, (byte)MapVirtualKey(VK_W, 0), KEYEVENTF_EXTENDEDKEY, (IntPtr)0);
 
+                                Console.WriteLine("Left amount: " + (joint[JointType.AnkleRight].Position.X- joint[JointType.KneeRight].Position.X));
+                                Console.WriteLine("Right amount: " + (joint[JointType.KneeRight].Position.X- joint[JointType.HipRight].Position.X));
+
                                 // 模擬A(向左)+(大彎)                            
-                                if (joint[JointType.HipRight].Position.X > (joint[JointType.KneeRight].Position.X + 0.05))
+                                if (joint[JointType.AnkleRight].Position.X > (joint[JointType.KneeRight].Position.X + 0.09))
                                 {
+                                    Console.WriteLine("Left Big Turn");
                                     keybd_event(VK_W, (byte)MapVirtualKey(VK_W, 0), KEYEVENTF_KEYUP, (IntPtr)0);
                                     keybd_event(VK_A, (byte)MapVirtualKey(VK_A, 0), KEYEVENTF_EXTENDEDKEY, (IntPtr)0);
                                 }
                                 // 模擬D(向右)+(大彎)                           
-                                else if (joint[JointType.HipRight].Position.X < (joint[JointType.KneeRight].Position.X - 0.07))
+                                else if (joint[JointType.KneeRight].Position.X > (joint[JointType.HipRight].Position.X + 0.1))
                                 {
+                                    Console.WriteLine("Right Big Turn");
                                     keybd_event(VK_W, (byte)MapVirtualKey(VK_W, 0), KEYEVENTF_KEYUP, (IntPtr)0);
                                     keybd_event(VK_D, (byte)MapVirtualKey(VK_D, 0), KEYEVENTF_EXTENDEDKEY, (IntPtr)0);
                                 }
                                 // 模擬A(向左)
-                                else if (joint[JointType.HipRight].Position.X > (joint[JointType.KneeRight].Position.X + 0.018))
+                                else if (joint[JointType.AnkleRight].Position.X > (joint[JointType.KneeRight].Position.X + 0.02))
                                 {
+                                    Console.WriteLine("Left Small Turn");
                                     keybd_event(VK_D, (byte)MapVirtualKey(VK_D, 0), KEYEVENTF_KEYUP, (IntPtr)0);
                                     if (A_counter < 1)
                                         keybd_event(VK_A, (byte)MapVirtualKey(VK_A, 0), KEYEVENTF_EXTENDEDKEY, (IntPtr)0);
@@ -442,8 +450,9 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                                     A_counter++;
                                 }
                                 // 模擬D(向右)
-                                else if (joint[JointType.HipRight].Position.X < (joint[JointType.KneeRight].Position.X - 0.04))
+                                else if (joint[JointType.KneeRight].Position.X > (joint[JointType.HipRight].Position.X + 0.04))
                                 {
+                                    Console.WriteLine("Right Small Turn");
                                     keybd_event(VK_A, (byte)MapVirtualKey(VK_A, 0), KEYEVENTF_KEYUP, (IntPtr)0);
                                     if (D_counter < 1)
                                         keybd_event(VK_D, (byte)MapVirtualKey(VK_D, 0), KEYEVENTF_EXTENDEDKEY, (IntPtr)0);
@@ -461,7 +470,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                                 }
                             }
                             // 模擬W(向前+跑)
-                            else if (kneeHipDistance > 0.145)
+                            else if (kneeHipDistance > 0.147)
                             {
                                 keybd_event(VK_W, (byte)MapVirtualKey(VK_W, 0), KEYEVENTF_EXTENDEDKEY, (IntPtr)0);
                                 keybd_event(VK_shift, (byte)MapVirtualKey(VK_shift, 0), KEYEVENTF_EXTENDEDKEY, (IntPtr)0);
@@ -470,14 +479,14 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                                 // 模擬滑鼠(向左滑)
                                 if (joint[JointType.HipLeft].Position.X > (joint[JointType.KneeLeft].Position.X + 0.05))
                                 {
-                                    int moveAmount = (int)((double)(kneeDistance - 0.225) * 1000);
+                                    int moveAmount = (int)((double)(kneeDistance - 0.227) * 1000);
                                     //Console.WriteLine("moveLeft: " + moveAmount);
                                     mouse_event(MOUSEEVENTF_MOVE, (-1) * moveAmount, 0, 0, 0);
                                 }
                                 // 模擬滑鼠(向右滑)
-                                else if (joint[JointType.AnkleRight].Position.X < (joint[JointType.KneeRight].Position.X - 0.018))
+                                else if (joint[JointType.AnkleLeft].Position.X < (joint[JointType.KneeLeft].Position.X - 0.018))
                                 {
-                                    int moveAmount = (int)((double)(0.22 - kneeDistance) * 1100);
+                                    int moveAmount = (int)((double)(0.217 - kneeDistance) * 1100);
                                     //Console.WriteLine("moveRight: " + moveAmount);
                                     mouse_event(MOUSEEVENTF_MOVE, moveAmount, 0, 0, 0);
                                 }
@@ -496,14 +505,14 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                                 // 模擬滑鼠(向左滑)
                                 if (joint[JointType.HipLeft].Position.X > (joint[JointType.KneeLeft].Position.X + 0.05))
                                 {
-                                    int moveAmount = (int)((double)(kneeDistance - 0.225) * 1000);
+                                    int moveAmount = (int)((double)(kneeDistance - 0.23) * 1000);
                                     //Console.WriteLine("moveLeft: " + moveAmount);
                                     mouse_event(MOUSEEVENTF_MOVE, (-1) * moveAmount, 0, 0, 0);
                                 }
                                 // 模擬滑鼠(向右滑)
-                                else if (joint[JointType.AnkleRight].Position.X < (joint[JointType.KneeRight].Position.X - 0.018))
+                                else if (joint[JointType.AnkleLeft].Position.X < (joint[JointType.KneeLeft].Position.X - 0.018))
                                 {
-                                    int moveAmount = (int)((double)(0.22 - kneeDistance) * 1100);
+                                    int moveAmount = (int)((double)(0.212 - kneeDistance) * 1100);
                                     //Console.WriteLine("moveRight: " + moveAmount);
                                     mouse_event(MOUSEEVENTF_MOVE, moveAmount, 0, 0, 0);
                                 }
@@ -752,18 +761,6 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             }
         }
 
-        private static void directionCounter()
-        {
-            if(A_counter > 8)
-                A_counter = 0;            
-
-            if (D_counter > 8)
-                D_counter = 0;            
-
-            if (W_counter > 12)
-                W_counter = 0;
-        }     
-
         private static void shooting(Skeleton[] skeletons)
         {
             for (int i = 0; i < skeletons.Length; i++)
@@ -772,9 +769,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                 {
                     JointCollection joint = skeletons[i].Joints;
 
-                    
-                    
-
+                                   
                     // 模擬舉槍滑鼠右鍵(瞄準)
                     if ((joint[JointType.WristLeft].Position.Y > joint[JointType.HipCenter].Position.Y) && (joint[JointType.WristRight].Position.Y > joint[JointType.HipCenter].Position.Y))
                     {                                     
@@ -807,8 +802,8 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                         if (x_movement > 0)
                             x_movement += 4;
 
-                        Console.WriteLine("X_movement: " + x_movement);
-                        Console.WriteLine("Y_movement: " + y_movement*(-1));
+                        //Console.WriteLine("X_movement: " + x_movement);
+                        //Console.WriteLine("Y_movement: " + y_movement*(-1));
 
                         if (move_check)
                         {
@@ -820,7 +815,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
 
 
                         // 模擬射擊左鍵(射擊)
-                        if ((joint[JointType.ElbowRight].Position.Z > joint[JointType.HipCenter].Position.Z+0.15) && (shoot_count <= 1))
+                        if ((joint[JointType.ElbowRight].Position.Z > joint[JointType.HipCenter].Position.Z+0.14) && (shoot_count <= 1))
                          {
                             mouseLeft = true;
                             mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
@@ -867,8 +862,19 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                     }
                 }
             }
-        }    
+        }
 
+        private static void directionCounter()
+        {
+            if (A_counter > 8)
+                A_counter = 0;
+
+            if (D_counter > 8)
+                D_counter = 0;
+
+            if (W_counter > 12)
+                W_counter = 0;
+        }
     }
 
     
